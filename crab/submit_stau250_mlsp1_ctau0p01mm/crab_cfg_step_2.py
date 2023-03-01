@@ -16,12 +16,12 @@ config.section_("JobType")
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = '../../python/SUS-RunIISummer20UL18DIGIPremix_cfg.py'
 
-config.JobType.maxJobRuntimeMin = 20*60
+config.JobType.maxJobRuntimeMin = 36*60
 config.JobType.maxMemoryMB = 4000
 
 config.section_("Data")
 
-config.Data.inputDataset = '/SUS-RunIISummer20UL18GEN-stau250_lsp1_ctau0p01mm_v6/sobhatta-GENSIM-4486bb96a21c327aeec17a65575a5940/USER'
+config.Data.inputDataset = '/SUS-RunIISummer20UL18GEN-stau250_lsp1_ctau0p01mm_v6/sobhatta-GENSIM-b0a37d0238fe37041367463c58c92822/USER'
 config.Data.inputDBS = 'phys03'
 
 config.Data.splitting = 'FileBased'#'Automatic' #'EventBased'#'EventAwareLumiBased'

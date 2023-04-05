@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: Configuration/GenProduction/python/SUS-RunIISummer20UL18wmLHEGEN-fragment-stau250_lsp1_ctau0p01mm.py --python_filename /nfs/dust/cms/user/sobhatta/work/LongLivedStaus/LLSTauProduction/script/../python/SUS-RunIISummer20UL18wmLHEGEN-stau250_lsp1_ctau0p01mm_cfg.py --eventcontent RAWSIM --outputCommand keep *_genParticlePlusGeant_*_*,keep *_packedGenParticlePlusGeant_*_*,keep *_prunedGenParticlePlusGeant_*_* --customise Configuration/DataProcessing/Utils.addMonitoring,SimG4Core/CustomPhysics/Exotica_HSCP_SIM_cfi.customise,SimG4Core/CustomPhysics/GenPlusSimParticles_cfi.customizeKeep,SimG4Core/CustomPhysics/GenPlusSimParticles_cfi.customizeProduce --datatier GEN-SIM --fileout file:SUS-RunIISummer20UL18wmLHEGEN-LLStau.root --conditions 106X_upgrade2018_realistic_v11_L1v1 --beamspot Realistic25ns13TeVEarly2018Collision --customise_commands process.RandomNumberGeneratorService.externalLHEProducer.initialSeed=int(1)\nprocess.source.numberEventsInLuminosityBlock=cms.untracked.uint32(100) --step GEN,SIM --geometry DB:Extended --era Run2_2018 --procModifiers run2_final_state_rad --no_exec --mc -n 1500
+# with command line options: Configuration/GenProduction/python/SUS-RunIISummer20UL18wmLHEGEN-fragment-stau250_lsp1_ctau0p01mm.py --python_filename /nfs/dust/cms/user/sobhatta/work/LongLivedStaus/LLSTauProduction/script/../python/SUS-RunIISummer20UL18wmLHEGEN-stau250_lsp1_ctau0p01mm_cfg.py --eventcontent RAWSIM,LHE --outputCommand keep *_genParticlePlusGeant_*_*,keep *_packedGenParticlePlusGeant_*_*,keep *_prunedGenParticlePlusGeant_*_* --customise Configuration/DataProcessing/Utils.addMonitoring,SimG4Core/CustomPhysics/Exotica_HSCP_SIM_cfi.customise,SimG4Core/CustomPhysics/GenPlusSimParticles_cfi.customizeKeep,SimG4Core/CustomPhysics/GenPlusSimParticles_cfi.customizeProduce --datatier GEN-SIM,LHE --fileout file:SUS-RunIISummer20UL18wmLHEGEN-LLStau.root --conditions 106X_upgrade2018_realistic_v11_L1v1 --beamspot Realistic25ns13TeVEarly2018Collision --customise_commands process.RandomNumberGeneratorService.externalLHEProducer.initialSeed=int(1)\nprocess.source.numberEventsInLuminosityBlock=cms.untracked.uint32(100) --step LHE,GEN,SIM --geometry DB:Extended --era Run2_2018 --procModifiers run2_final_state_rad --no_exec --mc -n 5
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
@@ -39,7 +39,7 @@ process.options = cms.untracked.PSet(
 
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
-    annotation = cms.untracked.string('Configuration/GenProduction/python/SUS-RunIISummer20UL18wmLHEGEN-fragment-stau250_lsp1_ctau0p01mm.py nevts:1500'),
+    annotation = cms.untracked.string('Configuration/GenProduction/python/SUS-RunIISummer20UL18wmLHEGEN-fragment-stau250_lsp1_ctau0p01mm.py nevts:5'),
     name = cms.untracked.string('Applications'),
     version = cms.untracked.string('$Revision: 1.19 $')
 )
@@ -62,6 +62,16 @@ process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
     splitLevel = cms.untracked.int32(0)
 )
 
+process.LHEoutput = cms.OutputModule("PoolOutputModule",
+    dataset = cms.untracked.PSet(
+        dataTier = cms.untracked.string('LHE'),
+        filterName = cms.untracked.string('')
+    ),
+    fileName = cms.untracked.string('file:SUS-RunIISummer20UL18wmLHEGEN-LLStau_inLHE.root'),
+    outputCommands = process.LHEEventContent.outputCommands,
+    splitLevel = cms.untracked.int32(0)
+)
+
 # Additional output definition
 
 # Other statements
@@ -72,8 +82,11 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v11
 process.RAWSIMoutput.outputCommands.append('keep *_genParticlePlusGeant_*_*')
 process.RAWSIMoutput.outputCommands.append('keep *_packedGenParticlePlusGeant_*_*')
 process.RAWSIMoutput.outputCommands.append('keep *_prunedGenParticlePlusGeant_*_*')
+process.LHEoutput.outputCommands.append('keep *_genParticlePlusGeant_*_*')
+process.LHEoutput.outputCommands.append('keep *_packedGenParticlePlusGeant_*_*')
+process.LHEoutput.outputCommands.append('keep *_prunedGenParticlePlusGeant_*_*')
 
-process.generator = cms.EDFilter("Pythia8GeneratorFilter",
+process.generator = cms.EDFilter("Pythia8HadronizerFilter",
     ConfigDescription = cms.string('TStauStauLL_250_1_0p01'),
     GridpackPath = cms.string('/cvmfs/cms.cern.ch/phys_generator/gridpacks/slc6_amd64_gcc481/13TeV/madgraph/V5_2.4.2/sus_sms/SMS-TStauStau/v1/SMS-TStauStau_mStau-250_slc6_amd64_gcc481_CMSSW_7_1_30_tarball.tar.xz'),
     PythiaParameters = cms.PSet(
@@ -95,6 +108,7 @@ process.generator = cms.EDFilter("Pythia8GeneratorFilter",
         parameterSets = cms.vstring(
             'pythia8CommonSettings', 
             'pythia8CP5Settings', 
+            'pythia8PSweightsSettings', 
             'JetMatchingParameters'
         ),
         pythia8CP5Settings = cms.vstring(
@@ -133,6 +147,16 @@ process.generator = cms.EDFilter("Pythia8GeneratorFilter",
             '1000015:tau0 = 1.000000e-02', 
             'ParticleDecays:tau0Max = 4000.1', 
             'LesHouches:setLifetime = 2'
+        ),
+        pythia8PSweightsSettings = cms.vstring(
+            'UncertaintyBands:doVariations = on', 
+            'UncertaintyBands:List = {isrRedHi isr:muRfac=0.707,fsrRedHi fsr:muRfac=0.707,isrRedLo isr:muRfac=1.414,fsrRedLo fsr:muRfac=1.414,isrDefHi isr:muRfac=0.5,fsrDefHi fsr:muRfac=0.5,isrDefLo isr:muRfac=2.0,fsrDefLo fsr:muRfac=2.0,isrConHi isr:muRfac=0.25,fsrConHi fsr:muRfac=0.25,isrConLo isr:muRfac=4.0,fsrConLo fsr:muRfac=4.0,fsr_G2GG_muR_dn fsr:G2GG:muRfac=0.5,fsr_G2GG_muR_up fsr:G2GG:muRfac=2.0,fsr_G2QQ_muR_dn fsr:G2QQ:muRfac=0.5,fsr_G2QQ_muR_up fsr:G2QQ:muRfac=2.0,fsr_Q2QG_muR_dn fsr:Q2QG:muRfac=0.5,fsr_Q2QG_muR_up fsr:Q2QG:muRfac=2.0,fsr_X2XG_muR_dn fsr:X2XG:muRfac=0.5,fsr_X2XG_muR_up fsr:X2XG:muRfac=2.0,fsr_G2GG_cNS_dn fsr:G2GG:cNS=-2.0,fsr_G2GG_cNS_up fsr:G2GG:cNS=2.0,fsr_G2QQ_cNS_dn fsr:G2QQ:cNS=-2.0,fsr_G2QQ_cNS_up fsr:G2QQ:cNS=2.0,fsr_Q2QG_cNS_dn fsr:Q2QG:cNS=-2.0,fsr_Q2QG_cNS_up fsr:Q2QG:cNS=2.0,fsr_X2XG_cNS_dn fsr:X2XG:cNS=-2.0,fsr_X2XG_cNS_up fsr:X2XG:cNS=2.0,isr_G2GG_muR_dn isr:G2GG:muRfac=0.5,isr_G2GG_muR_up isr:G2GG:muRfac=2.0,isr_G2QQ_muR_dn isr:G2QQ:muRfac=0.5,isr_G2QQ_muR_up isr:G2QQ:muRfac=2.0,isr_Q2QG_muR_dn isr:Q2QG:muRfac=0.5,isr_Q2QG_muR_up isr:Q2QG:muRfac=2.0,isr_X2XG_muR_dn isr:X2XG:muRfac=0.5,isr_X2XG_muR_up isr:X2XG:muRfac=2.0,isr_G2GG_cNS_dn isr:G2GG:cNS=-2.0,isr_G2GG_cNS_up isr:G2GG:cNS=2.0,isr_G2QQ_cNS_dn isr:G2QQ:cNS=-2.0,isr_G2QQ_cNS_up isr:G2QQ:cNS=2.0,isr_Q2QG_cNS_dn isr:Q2QG:cNS=-2.0,isr_Q2QG_cNS_up isr:Q2QG:cNS=2.0,isr_X2XG_cNS_dn isr:X2XG:cNS=-2.0,isr_X2XG_cNS_up isr:X2XG:cNS=2.0}', 
+            'UncertaintyBands:nFlavQ = 4', 
+            'UncertaintyBands:MPIshowers = on', 
+            'UncertaintyBands:overSampleFSR = 10.0', 
+            'UncertaintyBands:overSampleISR = 10.0', 
+            'UncertaintyBands:FSRpTmin2Fac = 20', 
+            'UncertaintyBands:ISRpTmin2Fac = 1'
         )
     ),
     SLHATableForPythia8 = cms.string('\nBLOCK MASS  # Mass Spectrum\n# PDG code           mass       particle\n   1000001     1.00000000E+05   # ~d_L\n   2000001     1.00000000E+05   # ~d_R\n   1000002     1.00000000E+05   # ~u_L\n   2000002     1.00000000E+05   # ~u_R\n   1000003     1.00000000E+05   # ~s_L\n   2000003     1.00000000E+05   # ~s_R\n   1000004     1.00000000E+05   # ~c_L\n   2000004     1.00000000E+05   # ~c_R\n   1000005     1.00000000E+05   # ~b_1\n   2000005     1.00000000E+05   # ~b_2\n   1000006     1.00000000E+05   # ~t_1\n   2000006     1.00000000E+05   # ~t_2\n   1000011     1.00000000E+05   # ~e_L\n   2000011     1.00000000E+05   # ~e_R\n   1000012     1.00000000E+05   # ~nu_eL\n   1000013     1.00000000E+05   # ~mu_L\n   2000013     1.00000000E+05   # ~mu_R\n   1000014     1.00000000E+05   # ~nu_muL\n   1000015     2.500000e+02          # ~tau_1\n   2000015     1.00000000E+05   # ~tau_2\n   1000016     1.00000000E+05   # ~nu_tauL\n   1000021     1.00000000E+05   # ~g\n   1000022     1.000000e+00           # ~chi_10\n   1000023     1.00000000E+05   # ~chi_20\n   1000025     1.00000000E+05   # ~chi_30\n   1000035     1.00000000E+05   # ~chi_40\n   1000024     1.00000000E+05   # ~chi_1+\n   1000037     1.00000000E+05   # ~chi_2+\n\n# DECAY TABLE\n#         PDG            Width\nDECAY   1000001     0.00000000E+00   # sdown_L decays\nDECAY   2000001     0.00000000E+00   # sdown_R decays\nDECAY   1000002     0.00000000E+00   # sup_L decays\nDECAY   2000002     0.00000000E+00   # sup_R decays\nDECAY   1000003     0.00000000E+00   # sstrange_L decays\nDECAY   2000003     0.00000000E+00   # sstrange_R decays\nDECAY   1000004     0.00000000E+00   # scharm_L decays\nDECAY   2000004     0.00000000E+00   # scharm_R decays\nDECAY   1000005     0.00000000E+00   # sbottom1 decays\nDECAY   2000005     0.00000000E+00   # sbottom2 decays\nDECAY   1000006     0.00000000E+00   # stop1 decays\nDECAY   2000006     0.00000000E+00   # stop2 decays\nDECAY   1000011     0.00000000E+00   # selectron_L decays\nDECAY   2000011     0.00000000E+00   # selectron_R decays\nDECAY   1000012     0.0000000E+00    # snu_elL decays\nDECAY   1000013     0.00000000E+00   # smuon_L decays\nDECAY   2000013     0.00000000E+00   # smuon_R decays\nDECAY   1000014     0.00000000E+00   # snu_muL decays\nDECAY   1000015     1.973270e-11           # stau_1 decays\n    1.00000000E+00    2    1000022    15\nDECAY   2000015     0.00000000E+00   # stau_2 decays\nDECAY   1000016     0.00000000E+00   # snu_tauL decays\nDECAY   1000021     0.00000000E+00   # gluino decays\nDECAY   1000022     0.00000000E+00   # neutralino1 decays\nDECAY   1000023     0.00000000E+00   # neutralino2 decays\nDECAY   1000024     0.00000000E+00   # chargino1+ decays\nDECAY   1000025     0.00000000E+00   # neutralino3 decays\nDECAY   1000035     0.00000000E+00   # neutralino4 decays\nDECAY   1000037     0.00000000E+00   # chargino2+ decays\n'),
@@ -149,19 +173,31 @@ process.generator = cms.EDFilter("Pythia8GeneratorFilter",
 )
 
 
+process.externalLHEProducer = cms.EDProducer("ExternalLHEProducer",
+    args = cms.vstring('/cvmfs/cms.cern.ch/phys_generator/gridpacks/slc6_amd64_gcc481/13TeV/madgraph/V5_2.4.2/sus_sms/SMS-TStauStau/v1/SMS-TStauStau_mStau-250_slc6_amd64_gcc481_CMSSW_7_1_30_tarball.tar.xz'),
+    nEvents = cms.untracked.uint32(5),
+    numberOfParameters = cms.uint32(1),
+    outputFile = cms.string('cmsgrid_final.lhe'),
+    scriptName = cms.FileInPath('GeneratorInterface/LHEInterface/data/run_generic_tarball_cvmfs.sh')
+)
+
+
 # Path and EndPath definitions
+process.lhe_step = cms.Path(process.externalLHEProducer)
 process.generation_step = cms.Path(process.pgen)
 process.simulation_step = cms.Path(process.psim)
 process.genfiltersummary_step = cms.EndPath(process.genFilterSummary)
 process.endjob_step = cms.EndPath(process.endOfProcess)
 process.RAWSIMoutput_step = cms.EndPath(process.RAWSIMoutput)
+process.LHEoutput_step = cms.EndPath(process.LHEoutput)
 
 # Schedule definition
-process.schedule = cms.Schedule(process.generation_step,process.genfiltersummary_step,process.simulation_step,process.endjob_step,process.RAWSIMoutput_step)
+process.schedule = cms.Schedule(process.lhe_step,process.generation_step,process.genfiltersummary_step,process.simulation_step,process.endjob_step,process.RAWSIMoutput_step,process.LHEoutput_step)
 from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
 associatePatAlgosToolsTask(process)
 # filter all path with the production filter sequence
 for path in process.paths:
+	if path in ['lhe_step']: continue
 	getattr(process,path).insert(0, process.generator)
 
 # customisation of the process.

@@ -77,13 +77,13 @@ DECAY   1000037     0.00000000E+00   # chargino2+ decays
 
 import FWCore.ParameterSet.Config as cms
 
-# externalLHEProducer = cms.EDProducer("ExternalLHEProducer",
-#     args = cms.vstring(GRIDPACK),
-#     nEvents = cms.untracked.uint32(5000),
-#     numberOfParameters = cms.uint32(1),
-#     outputFile = cms.string('cmsgrid_final.lhe'),
-#     scriptName = cms.FileInPath('GeneratorInterface/LHEInterface/data/run_generic_tarball_cvmfs.sh')
-# )
+externalLHEProducer = cms.EDProducer("ExternalLHEProducer",
+    args = cms.vstring(GRIDPACK),
+    nEvents = cms.untracked.uint32(5000),
+    numberOfParameters = cms.uint32(1),
+    outputFile = cms.string('cmsgrid_final.lhe'),
+    scriptName = cms.FileInPath('GeneratorInterface/LHEInterface/data/run_generic_tarball_cvmfs.sh')
+)
 
 from Configuration.Generator.Pythia8CommonSettings_cfi import *
 from Configuration.Generator.MCTunes2017.PythiaCP5Settings_cfi import *
@@ -102,6 +102,7 @@ slhatable = slhatable.replace('%CTAU%','%e' % ctau)
 basePythiaParameters = cms.PSet(
      pythia8CommonSettingsBlock,
      pythia8CP5SettingsBlock,
+     pythia8PSweightsSettingsBlock,
      JetMatchingParameters = cms.vstring(
           'JetMatching:setMad = off',
           'JetMatching:scheme = 1',
@@ -119,6 +120,7 @@ basePythiaParameters = cms.PSet(
      ),
      parameterSets = cms.vstring('pythia8CommonSettings',
                                    'pythia8CP5Settings',
+                                   'pythia8PSweightsSettings',
                                    'JetMatchingParameters'
      )
 )
@@ -127,7 +129,7 @@ basePythiaParameters.pythia8CommonSettings.extend(['1000015:tau0 = %e' % CTAU0_P
 basePythiaParameters.pythia8CommonSettings.extend(['ParticleDecays:tau0Max = 4000.1'])
 basePythiaParameters.pythia8CommonSettings.extend(['LesHouches:setLifetime = 2'])
 
-generator = cms.EDFilter("Pythia8GeneratorFilter",
+generator = cms.EDFilter("Pythia8HadronizerFilter",
      maxEventsToPrint = cms.untracked.int32(1),
      pythiaPylistVerbosity = cms.untracked.int32(1),
      filterEfficiency = cms.untracked.double(1.0),
